@@ -1,5 +1,50 @@
 import argparse
 import os
+import cv2
+import random
+import tempfile
+
+def extract_random_frame(video_path):
+    """Extracts a random frame from a video file and saves it as a temporary image.
+
+    Args:
+        video_path (str): The path to the video file.
+
+    Returns:
+        tuple: A tuple containing the path to the saved frame image and its timestamp in seconds, or (None, None) if an error occurs.
+    """
+    try:
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            print(f"Error: Could not open video file: {video_path}")
+            return None, None
+
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if total_frames == 0:
+            print(f"Error: Video file has no frames: {video_path}")
+            return None, None
+
+        random_frame_number = random.randint(0, total_frames - 1)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, random_frame_number)
+
+        success, frame = cap.read()
+        if not success:
+            print("Error: Failed to read frame from video.")
+            return None, None
+
+        timestamp_ms = cap.get(cv2.CAP_PROP_POS_MSEC)
+        timestamp_sec = timestamp_ms / 1000.0
+
+        temp_dir = tempfile.gettempdir()
+        frame_path = os.path.join(temp_dir, "framedrop_frame.png")
+        cv2.imwrite(frame_path, frame)
+
+        cap.release()
+        return frame_path, timestamp_sec
+
+    except Exception as e:
+        print(f"An error occurred during frame extraction: {e}")
+        return None, None
 
 def main():
     parser = argparse.ArgumentParser(description="FrameDrop: Post random video frames to Bluesky.")
@@ -11,8 +56,12 @@ def main():
 
     if args.video:
         # Single run mode
-        print("Starting single run...")
-        # Logic for single run will go here
+        print(f"Starting single run for video: {args.video}")
+        frame_path, timestamp = extract_random_frame(args.video)
+        if frame_path:
+            print(f"Successfully extracted frame to: {frame_path} at {timestamp:.2f}s")
+            # Clean up the temporary file
+            os.remove(frame_path)
     else:
         # Daemon mode
         print("Starting daemon mode...")

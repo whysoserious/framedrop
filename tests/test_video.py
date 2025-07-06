@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import os
+import tempfile
 from video import extract_random_frame, VideoError
 
 # Since we can't rely on cv2 in a bare environment, we mock it entirely.
@@ -50,9 +51,10 @@ class TestVideo(unittest.TestCase):
         frame_path, timestamp = extract_random_frame(self.video_path)
         self.assertIsNotNone(frame_path)
         self.assertGreater(timestamp, 0)
-        self.assertTrue(os.path.exists(frame_path))
         mock_imwrite.assert_called_once()
-        os.remove(frame_path) # Clean up
+        # Verify that imwrite was called with a path in the temp directory and a .png extension
+        self.assertTrue(frame_path.startswith(tempfile.gettempdir()))
+        self.assertTrue(frame_path.endswith('.png'))
 
     def test_extract_frame_file_not_found(self, mock_imwrite):
         with self.assertRaises(VideoError):

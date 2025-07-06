@@ -3,6 +3,8 @@ import os
 import cv2
 import random
 import tempfile
+import datetime
+from atproto import Client, models
 
 def extract_random_frame(video_path):
     """Extracts a random frame from a video file and saves it as a temporary image.
@@ -46,10 +48,44 @@ def extract_random_frame(video_path):
         print(f"An error occurred during frame extraction: {e}")
         return None, None
 
+def post_to_bluesky(image_path, post_text, alt_text):
+    """Posts an image and text to Bluesky.
+
+    Args:
+        image_path (str): The path to the image file.
+        post_text (str): The text of the post.
+        alt_text (str): The alt text for the image.
+    """
+    try:
+        client = Client()
+        client.login(
+            os.environ['BLUESKY_HANDLE'],
+            os.environ['BLUESKY_PASSWORD']
+        )
+
+        with open(image_path, 'rb') as f:
+            img_data = f.read()
+
+        upload = client.com.atproto.repo.upload_blob(img_data)
+        embed = models.ComAtprotoRepoStrongRef.Main(
+            cid=upload.blob.cid,
+            uri=client.com.atproto.repo.create_record(
+                models.ComAtprotoRepoCreateRecord.Data(
+                    repo=client.me.did,
+                    collection=models.ids.AppBskyFeedPost,
+                    record=models.AppBskyFeedPost.Main(text=post_text, created_at=client.get_current_time_iso(), embed=models.AppBskyEmbedImages.Main(images=[models.AppBskyEmbedImages.Image(alt=alt_text, image=upload.blob)]))                )
+            ).uri
+        )
+
+        print("Successfully posted to Bluesky!")
+
+    except Exception as e:
+        print(f"An error occurred while posting to Bluesky: {e}")
+
 def main():
     parser = argparse.ArgumentParser(description="FrameDrop: Post random video frames to Bluesky.")
     parser.add_argument('--video', help='Path to the video file for a single run.')
-    parser.add_argument('--text', help='Text to accompany the frame for a single run.')
+    parser.add_argument('--text', default="", help='Text to accompany the frame for a single run.')
     parser.add_argument('--timestamp', action='store_true', help='Include the frame timestamp in the post for a single run.')
 
     args = parser.parse_args()
@@ -60,6 +96,16 @@ def main():
         frame_path, timestamp = extract_random_frame(args.video)
         if frame_path:
             print(f"Successfully extracted frame to: {frame_path} at {timestamp:.2f}s")
+            
+            post_text = args.text
+            if args.timestamp:
+                time_str = str(datetime.timedelta(seconds=int(timestamp)))
+                post_text = f"{post_text} [{time_str}]"
+
+            alt_text = f"A frame from the video {os.path.basename(args.video)} at {timestamp:.2f} seconds."
+
+            post_to_bluesky(frame_path, post_text, alt_text)
+
             # Clean up the temporary file
             os.remove(frame_path)
     else:

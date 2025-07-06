@@ -1,14 +1,14 @@
-To jest szkic planu nowej aplikacji o nazwie __FrameRater__.
+This is a draft plan for a new application called __FrameRater__.
 
-Ta aplikacja ma wysyłać posta na konto na Bluesky, które zawiera losową klatkę z podanego pliku video, podaną treść i ewentualnie timestamp klatki.
+This application is intended to send a post to a Bluesky account, which includes a random frame from a given video file, specified content, and optionally the frame's timestamp.
 
-Tryby działania:
-- jednorazowe uruchomienie skryptu wyśle posta na Bluesky. Można podać treść posta z cmdline. Skrypt sam losowo wybierze klatkę z podanego w cmdline filmu avi
-- daemon mode: skrypt działa cały czas i wysyła posty o zadanych godzinach. Zaproponować jak to zrobić.\
+Operating modes:
+- One-time script execution will send a post to Bluesky. The post content can be provided from the command line. The script will randomly select a frame from the specified .avi video file.
+- Daemon mode: the script runs continuously and sends posts at specified times. Propose how to implement this.
 
-Oba tryby mają działać w Docker image. 
+Both modes should run within a Docker image.
 
-Język programowania: Python. 
+Programming language: Python.
 
-Przygotuj dokładne logi. 
-Cały kod, wszystkie komentarze i logi mają być po angielsku.
+Prepare detailed logs.
+All code, all comments, and logs should be in English.

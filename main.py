@@ -28,6 +28,7 @@ def run_single_post(video_path, text, include_timestamp):
 
         client = BlueskyClient(cfg.bluesky_handle, cfg.bluesky_password)
         client.post_image(frame_path, post_text, alt_text)
+        print("Single run completed.")
 
     except (ConfigError, VideoError, BlueskyError) as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -66,7 +67,7 @@ def run_scheduled_post(cfg):
 
 def start_daemon_mode():
     """Starts the application in daemon mode."""
-    print("Starting daemon mode...")
+    print("Daemon mode started.")
     try:
         cfg = Config()
         cfg.validate_for_daemon()
@@ -83,8 +84,11 @@ def start_daemon_mode():
     except ConfigError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
+    finally:
+        print("Daemon mode stopped.")
 
 def main():
+    print("FrameDrop application started.")
     parser = argparse.ArgumentParser(description="FrameDrop: Post random video frames to Bluesky.")
     parser.add_argument('--video', help='Path to the video file for a single run.')
     parser.add_argument('--text', default="", help='Text to accompany the frame for a single run.')

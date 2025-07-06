@@ -4,6 +4,8 @@ import cv2
 import random
 import tempfile
 import datetime
+import schedule
+import time
 from atproto import Client, models
 
 def extract_random_frame(video_path):
@@ -82,6 +84,30 @@ def post_to_bluesky(image_path, post_text, alt_text):
     except Exception as e:
         print(f"An error occurred while posting to Bluesky: {e}")
 
+def run_scheduled_post():
+    """The main job for the daemon mode, controlled by environment variables."""
+    print("Running scheduled post...")
+    video_path = os.environ.get('VIDEO_PATH')
+    if not video_path:
+        print("Error: VIDEO_PATH environment variable not set.")
+        return
+
+    frame_path, timestamp = extract_random_frame(video_path)
+    if frame_path:
+        print(f"Successfully extracted frame to: {frame_path} at {timestamp:.2f}s")
+        
+        post_text = os.environ.get('POST_TEXT', '')
+        if os.environ.get('ADD_TIMESTAMP', 'true').lower() == 'true':
+            time_str = str(datetime.timedelta(seconds=int(timestamp)))
+            post_text = f"{post_text} [{time_str}]"
+
+        alt_text = f"A frame from the video {os.path.basename(video_path)} at {timestamp:.2f} seconds."
+
+        post_to_bluesky(frame_path, post_text, alt_text)
+
+        # Clean up the temporary file
+        os.remove(frame_path)
+
 def main():
     parser = argparse.ArgumentParser(description="FrameDrop: Post random video frames to Bluesky.")
     parser.add_argument('--video', help='Path to the video file for a single run.')
@@ -111,7 +137,14 @@ def main():
     else:
         # Daemon mode
         print("Starting daemon mode...")
-        # Logic for daemon mode will go here
+        schedule_times = os.environ.get('SCHEDULE_TIMES', '12:00').split(',')
+        for t in schedule_times:
+            schedule.every().day.at(t.strip()).do(run_scheduled_post)
+            print(f"Scheduled post at {t.strip()}")
+
+        while True:
+            schedule.run_pending()
+            time.sleep(60)
 
 if __name__ == "__main__":
     main()

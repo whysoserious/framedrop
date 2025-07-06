@@ -4,20 +4,28 @@ import sys
 import datetime
 import schedule
 import time
+import logging
 
 from config import Config, ConfigError
 from video import extract_random_frame, VideoError
 from bluesky import BlueskyClient, BlueskyError
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
 def run_single_post(video_path, text, include_timestamp):
     """Runs the logic for a single post."""
     try:
-        print(f"Starting single run for video: {video_path}")
+        logging.info(f"Starting single run for video: {video_path}")
         cfg = Config()
         cfg.validate_for_single_run()
 
         frame_path, timestamp = extract_random_frame(video_path)
-        print(f"Successfully extracted frame to: {frame_path} at {timestamp:.2f}s")
+        logging.info(f"Successfully extracted frame to: {frame_path} at {timestamp:.2f}s")
 
         post_text = text
         if include_timestamp:
@@ -28,13 +36,13 @@ def run_single_post(video_path, text, include_timestamp):
 
         client = BlueskyClient(cfg.bluesky_handle, cfg.bluesky_password)
         client.post_image(frame_path, post_text, alt_text)
-        print("Single run completed.")
+        logging.info("Single run completed.")
 
     except (ConfigError, VideoError, BlueskyError) as e:
-        print(f"Error: {e}", file=sys.stderr)
+        logging.error(f"Error: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"An unexpected error occurred: {e}", file=sys.stderr)
+        logging.error(f"An unexpected error occurred: {e}")
         sys.exit(1)
     finally:
         if 'frame_path' in locals() and os.path.exists(frame_path):
@@ -43,9 +51,9 @@ def run_single_post(video_path, text, include_timestamp):
 def run_scheduled_post(cfg):
     """The main job for the daemon mode."""
     try:
-        print("Running scheduled post...")
+        logging.info("Running scheduled post...")
         frame_path, timestamp = extract_random_frame(cfg.video_path)
-        print(f"Successfully extracted frame to: {frame_path} at {timestamp:.2f}s")
+        logging.info(f"Successfully extracted frame to: {frame_path} at {timestamp:.2f}s")
 
         post_text = cfg.post_text
         if cfg.add_timestamp:
@@ -58,37 +66,37 @@ def run_scheduled_post(cfg):
         client.post_image(frame_path, post_text, alt_text)
 
     except (VideoError, BlueskyError) as e:
-        print(f"Scheduled post failed: {e}", file=sys.stderr)
+        logging.error(f"Scheduled post failed: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred during scheduled post: {e}", file=sys.stderr)
+        logging.error(f"An unexpected error occurred during scheduled post: {e}")
     finally:
         if 'frame_path' in locals() and os.path.exists(frame_path):
             os.remove(frame_path)
 
 def start_daemon_mode():
     """Starts the application in daemon mode."""
-    print("Daemon mode started.")
+    logging.info("Daemon mode started.")
     try:
         cfg = Config()
         cfg.validate_for_daemon()
 
         for t in cfg.schedule_times:
             schedule.every().day.at(t.strip()).do(run_scheduled_post, cfg)
-            print(f"Scheduled post at {t.strip()}")
+            logging.info(f"Scheduled post at {t.strip()}")
         
-        print("Scheduler started. Waiting for jobs...")
+        logging.info("Scheduler started. Waiting for jobs...")
         while True:
             schedule.run_pending()
             time.sleep(1)
 
     except ConfigError as e:
-        print(f"Error: {e}", file=sys.stderr)
+        logging.error(f"Error: {e}")
         sys.exit(1)
     finally:
-        print("Daemon mode stopped.")
+        logging.info("Daemon mode stopped.")
 
 def main():
-    print("FrameDrop application started.")
+    logging.info("FrameDrop application started.")
     parser = argparse.ArgumentParser(description="FrameDrop: Post random video frames to Bluesky.")
     parser.add_argument('--video', help='Path to the video file for a single run.')
     parser.add_argument('--text', default="", help='Text to accompany the frame for a single run.')

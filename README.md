@@ -1,121 +1,121 @@
 # FrameDrop
 
-> Prosta aplikacja w Pythonie do automatycznego publikowania na Bluesky losowych klatek z plików wideo.
+> A simple Python application for automatically posting random frames from video files to Bluesky.
 
-FrameDrop to narzędzie, które pozwala ożywić konto na Bluesky, regularnie publikując na nim kadry z Twoich ulubionych filmów lub innych materiałów wideo. Aplikacja może działać w tle, wysyłając posty o zaplanowanych godzinach, lub być uruchamiana jednorazowo.
+FrameDrop is a tool that helps bring your Bluesky account to life by regularly publishing frames from your favorite movies or other video materials. The application can run in the background, sending posts at scheduled times, or be launched for a single, one-time post.
 
-## Główne Funkcjonalności
+## Key Features
 
--   **Losowanie klatek:** Wybiera losowy moment z podanego pliku wideo i eksportuje go jako obraz.
--   **Publikacja na Bluesky:** Automatycznie wysyła post z obrazem i zdefiniowanym tekstem.
--   **Dwa tryby działania:**
-    1.  **Tryb demona:** Działa stale i publikuje posty według harmonogramu.
-    2.  **Tryb jednorazowy:** Publikuje jeden post i kończy działanie.
--   **Elastyczna konfiguracja:** Wszystkie ustawienia (dane logowania, harmonogram, ścieżki) są zarządzane przez zmienne środowiskowe.
--   **Gotowy do użycia w Dockerze:** Cała aplikacja jest spakowana w obraz Docker, co ułatwia uruchomienie.
+-   **Frame Randomization:** Selects a random moment from a given video file and exports it as an image.
+-   **Bluesky Publication:** Automatically sends a post with the image and defined text.
+-   **Two Operating Modes:**
+    1.  **Daemon Mode:** Runs continuously and publishes posts according to a schedule.
+    2.  **Single Run Mode:** Publishes one post and then exits.
+-   **Flexible Configuration:** All settings (login credentials, schedule, paths) are managed via environment variables.
+-   **Docker Ready:** The entire application is packaged into a Docker image, making it easy to deploy.
 
-## Wymagania Wstępne
+## Prerequisites
 
-1.  **Docker:** Musisz mieć zainstalowany Docker na swoim komputerze.
-2.  **Konto Bluesky:** Potrzebujesz aktywnego konta na platformie Bluesky.
-3.  **Plik wideo:** Przygotuj plik wideo (np. w formacie `.mp4`, `.avi`, `.mkv`), z którego będą pobierane klatki.
+1.  **Docker:** You need to have Docker installed on your computer.
+2.  **Bluesky Account:** You need an active account on the Bluesky platform.
+3.  **Video File:** Prepare a video file (e.g., in `.mp4`, `.avi`, `.mkv` format) from which frames will be extracted.
 
-## Instalacja i Konfiguracja
+## Installation and Configuration
 
-### Krok 1: Przygotowanie danych do logowania Bluesky
+### Step 1: Prepare Bluesky Login Credentials
 
-Ze względów bezpieczeństwa **nie używaj swojego głównego hasła do konta**. Zamiast tego, wygeneruj dedykowane "hasło aplikacji".
+For security reasons, **do not use your main account password**. Instead, generate a dedicated "app password."
 
-1.  Zaloguj się na swoje konto na [bsky.app](https://bsky.app).
-2.  Przejdź do **Settings** (Ustawienia).
-3.  W sekcji **Advanced** (Zaawansowane) znajdź i kliknij **App Passwords** (Hasła aplikacji).
-4.  Kliknij **Add App Password**, aby wygenerować nowe hasło. Nadaj mu nazwę, np. `FrameDrop`.
-5.  **Skopiuj wygenerowane hasło** (będzie w formacie `xxxx-xxxx-xxxx-xxxx`) i zapisz je w bezpiecznym miejscu. Będzie potrzebne w następnym kroku.
-6.  Potrzebny będzie również Twój **handle** (nazwa użytkownika), np. `twojanazwa.bsky.social`.
+1.  Log in to your account on [bsky.app](https://bsky.app).
+2.  Go to **Settings**.
+3.  In the **Advanced** section, find and click **App Passwords**.
+4.  Click **Add App Password** to generate a new password. Give it a name, e.g., `FrameDrop`.
+5.  **Copy the generated password** (it will be in `xxxx-xxxx-xxxx-xxxx` format) and save it in a secure place. You will need it in the next step.
+6.  You will also need your **handle** (username), e.g., `yourname.bsky.social`.
 
-### Krok 2: Konfiguracja zmiennych środowiskowych
+### Step 2: Configure Environment Variables
 
-Aplikacja jest konfigurowana za pomocą zmiennych środowiskowych. Stwórz w głównym folderze projektu plik o nazwie `.env` i uzupełnij go według poniższego wzoru:
+The application is configured using environment variables. Create a file named `.env` in the main project folder and fill it in according to the pattern below:
 
 ```env
-# --- Dane logowania do Bluesky ---
-# Twój handle (login) na Bluesky
-BLUESKY_HANDLE=twojanazwa.bsky.social
-# Hasło aplikacji wygenerowane w poprzednim kroku
+# --- Bluesky Login Credentials ---
+# Your Bluesky handle (username)
+BLUESKY_HANDLE=yourname.bsky.social
+# App password generated in the previous step
 BLUESKY_PASSWORD=xxxx-xxxx-xxxx-xxxx
 
-# --- Konfiguracja dla trybu demona ---
-# Ścieżka do pliku wideo WEWNĄTRZ kontenera Docker
-VIDEO_PATH=/app/videos/moj_film.mp4
-# Godziny publikacji, oddzielone przecinkami
+# --- Daemon Mode Configuration ---
+# Path to the video file INSIDE the Docker container
+VIDEO_PATH=/app/videos/my_movie.mp4
+# Publication times, comma-separated
 SCHEDULE_TIMES=10:00,18:30
-# Domyślny tekst posta
-POST_TEXT=Klatka dnia!  فريمدروب
-# Czy dołączyć timestamp do posta (true/false)
+# Default post text
+POST_TEXT=Frame of the day!  فريمدروب
+# Whether to include the timestamp in the post (true/false)
 ADD_TIMESTAMP=true
 ```
 
-**Ważne:** Ścieżka `VIDEO_PATH` odnosi się do systemu plików *wewnątrz* kontenera Docker. W kolejnym kroku pokażemy, jak zmapować lokalny folder z filmami do tej ścieżki.
+**Important:** The `VIDEO_PATH` refers to the file system *inside* the Docker container. In the next step, we will show you how to map your local video folder to this path.
 
-### Krok 3: Zbudowanie obrazu Docker
+### Step 3: Build the Docker Image
 
-Otwórz terminal w głównym folderze projektu i wykonaj polecenie:
+Open a terminal in the main project folder and execute the command:
 
 ```bash
 docker build -t framedrop .
 ```
 
-To polecenie zbuduje obraz Docker o nazwie `framedrop` na podstawie pliku `Dockerfile`.
+This command will build a Docker image named `framedrop` based on the `Dockerfile`.
 
-## Uruchomienie Aplikacji
+## Running the Application
 
-Upewnij się, że masz przygotowany plik `.env` oraz folder z plikiem wideo.
+Make sure you have your `.env` file ready and a folder with your video file.
 
-### Tryb Demona (zalecany)
+### Daemon Mode (recommended)
 
-Ten tryb uruchamia aplikację w tle. Będzie ona publikować posty o godzinach zdefiniowanych w `SCHEDULE_TIMES`.
+This mode runs the application in the background. It will publish posts at the times defined in `SCHEDULE_TIMES`.
 
-Uruchom kontener za pomocą poniższego polecenia. Pamiętaj, aby zastąpić `/sciezka/do/twoich/filmow` rzeczywistą ścieżką do folderu z plikami wideo na Twoim komputerze.
+Run the container using the command below. Remember to replace `/path/to/your/videos` with the actual path to the folder containing your video files on your computer.
 
 ```bash
-docker run -d --env-file .env -v /sciezka/do/twoich/filmow:/app/videos --name framedrop-app framedrop
+docker run -d --env-file .env -v /path/to/your/videos:/app/videos --name framedrop-app framedrop
 ```
 
--   `-d`: Uruchamia kontener w trybie "detached" (w tle).
--   `--env-file .env`: Wczytuje zmienne środowiskowe z pliku `.env`.
--   `-v /sciezka/do/twoich/filmow:/app/videos`: Mapuje Twój lokalny folder z filmami do folderu `/app/videos` wewnątrz kontenera.
--   `--name framedrop-app`: Nadaje kontenerowi przyjazną nazwę.
+-   `-d`: Runs the container in "detached" mode (in the background).
+-   `--env-file .env`: Loads environment variables from the `.env` file.
+-   `-v /path/to/your/videos:/app/videos`: Maps your local video folder to the `/app/videos` folder inside the container.
+-   `--name framedrop-app`: Assigns a friendly name to the container.
 
-Aby zobaczyć logi aplikacji:
+To view application logs:
 `docker logs -f framedrop-app`
 
-Aby zatrzymać aplikację:
+To stop the application:
 `docker stop framedrop-app`
 
-### Tryb Jednorazowy
+### Single Run Mode
 
-Jeśli chcesz opublikować tylko jedną klatkę, możesz uruchomić kontener, nadpisując domyślną komendę.
+If you want to publish only one frame, you can run the container by overriding the default command.
 
 ```bash
-docker run --rm --env-file .env -v /sciezka/do/twoich/filmow:/app/videos framedrop \
+docker run --rm --env-file .env -v /path/to/your/videos:/app/videos framedrop \
   python main.py \
-    --video /app/videos/inny_film.mp4 \
-    --text "Specjalny post!" \
+    --video /app/videos/another_movie.mp4 \
+    --text "Special post!" \
     --timestamp
 ```
 
--   `--rm`: Automatycznie usuwa kontener po zakończeniu pracy.
--   Po nazwie obrazu (`framedrop`) podajemy nową komendę do wykonania wewnątrz kontenera.
+-   `--rm`: Automatically removes the container after it finishes.
+-   After the image name (`framedrop`), we provide the new command to execute inside the container.
 
-## Szczegóły Konfiguracji (Zmienne Środowiskowe)
+## Configuration Details (Environment Variables)
 
-| Zmienna           | Opis                                                                                             | Domyślnie | Wymagana      |
+| Variable          | Description                                                                                      | Default   | Required      |
 | ----------------- | ------------------------------------------------------------------------------------------------ | --------- | ------------- |
-| `BLUESKY_HANDLE`  | Twój handle (login) na Bluesky.                                                                  | -         | **Tak**       |
-| `BLUESKY_PASSWORD`| Wygenerowane hasło aplikacji.                                                                    | -         | **Tak**       |
-| `VIDEO_PATH`      | Ścieżka do pliku wideo dla trybu demona.                                                         | -         | Dla trybu demona |
-| `SCHEDULE_TIMES`  | Godziny publikacji dla trybu demona (format `HH:MM`, oddzielone przecinkami).                      | `12:00`   | Nie           |
-| `POST_TEXT`       | Domyślny tekst dołączany do posta.                                                               | ""        | Nie           |
-| `ADD_TIMESTAMP`   | Czy dodawać znacznik czasu klatki do tekstu posta (`true` lub `false`).                            | `true`    | Nie           |
+| `BLUESKY_HANDLE`  | Your Bluesky handle (username).                                                                  | -         | **Yes**       |
+| `BLUESKY_PASSWORD`| The generated app password.                                                                      | -         | **Yes**       |
+| `VIDEO_PATH`      | Path to the video file for daemon mode.                                                          | -         | For daemon mode |
+| `SCHEDULE_TIMES`  | Publication times for daemon mode (`HH:MM` format, comma-separated).                             | `12:00`   | No            |
+| `POST_TEXT`       | Default text to include in the post.                                                             | ""        | No            |
+| `ADD_TIMESTAMP`   | Whether to add the frame timestamp to the post text (`true` or `false`).                         | `true`    | No            |
 
 ```

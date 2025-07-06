@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from bluesky import BlueskyClient, BlueskyError
-from atproto import models # Import models
+from atproto_client.models import blob_ref
 
 # Mock the entire atproto Client
 @patch('bluesky.Client')
@@ -25,9 +25,10 @@ class TestBlueskyClient(unittest.TestCase):
         
         # Mock the blob upload and record creation
         mock_upload = MagicMock()
-        # Ensure mock_upload.blob is an instance of models.BlobRef
-        mock_upload.blob = MagicMock(spec=models.BlobRef, cid='some_cid', mime_type='image/png', size=1234)
+        mock_upload.blob = MagicMock(spec=blob_ref.BlobRef, cid='some_cid', mime_type='image/png', size=1234)
         mock_instance.com.atproto.repo.upload_blob.return_value = mock_upload
+        mock_instance.get_current_time_iso.return_value = "2025-07-06T12:00:00.000Z"
+        mock_instance.me.did = "did:plc:testuser"
 
         with patch('builtins.open', unittest.mock.mock_open(read_data=b'img')):
             client.post_image('fake_path.png', 'Hello', 'Alt text')

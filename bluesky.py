@@ -1,5 +1,8 @@
 
-from atproto import Client, models
+from atproto import Client
+from atproto_client.models.app.bsky.feed import post as AppBskyFeedPost
+from atproto_client.models.app.bsky.embed import images as AppBskyEmbedImages
+from atproto_client.models import ids, ComAtprotoRepoCreateRecord, ComAtprotoRepoStrongRef
 import os
 
 class BlueskyError(Exception):
@@ -38,13 +41,13 @@ class BlueskyClient:
             if not upload:
                 raise BlueskyError("Failed to upload image blob.")
 
-            embed = models.AppBskyEmbedImages.Main(images=[models.AppBskyEmbedImages.Image(alt=alt_text, image=upload.blob)])
+            embed = AppBskyEmbedImages.Main(images=[AppBskyEmbedImages.Image(alt=alt_text, image=upload.blob)])
             
             self.client.com.atproto.repo.create_record(
-                models.ComAtprotoRepoCreateRecord.Data(
+                ComAtprotoRepoCreateRecord.Data(
                     repo=self.client.me.did,
-                    collection=models.ids.AppBskyFeedPost,
-                    record=models.AppBskyFeedPost.Main(
+                    collection=ids.AppBskyFeedPost,
+                    record=AppBskyFeedPost.Record(
                         text=post_text, 
                         created_at=self.client.get_current_time_iso(), 
                         embed=embed
@@ -54,3 +57,4 @@ class BlueskyClient:
             print("Successfully posted to Bluesky!")
         except Exception as e:
             raise BlueskyError(f"An error occurred while posting to Bluesky: {e}")
+

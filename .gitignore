@@ -1,15 +1,12 @@
-# Pliki tymczasowe Pythona
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Pliki środowiskowe
 .env
-
-# Pliki IDE
 .idea/
 .vscode/
-
-# Pliki systemowe
 .DS_Store
+notes.txt
+
+
+

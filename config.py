@@ -14,6 +14,7 @@ class Config:
         self.schedule_times = os.environ.get('SCHEDULE_TIMES', '12:00').split(',')
         self.post_text = os.environ.get('POST_TEXT', '')
         self.add_timestamp = os.environ.get('ADD_TIMESTAMP', 'true').lower() == 'true'
+        self.bluesky_max_upload_size = int(os.environ.get('BLUESKY_MAX_UPLOAD_SIZE', 900 * 1024))
 
     def validate_for_daemon(self):
         """Validate required configuration for daemon mode."""

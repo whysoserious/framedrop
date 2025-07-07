@@ -34,7 +34,7 @@ def run_single_post(video_path, text, include_timestamp):
 
         alt_text = f"A frame from {os.path.basename(video_path)} at {timestamp:.2f} seconds."
 
-        client = BlueskyClient(cfg.bluesky_handle, cfg.bluesky_password)
+        client = BlueskyClient(cfg.bluesky_handle, cfg.bluesky_password, cfg.bluesky_max_upload_size)
         client.post_image(frame_path, post_text, alt_text)
         logging.info("Single run completed.")
 
@@ -62,7 +62,7 @@ def run_scheduled_post(cfg):
 
         alt_text = f"A frame from {os.path.basename(cfg.video_path)} at {timestamp:.2f} seconds."
 
-        client = BlueskyClient(cfg.bluesky_handle, cfg.bluesky_password)
+        client = BlueskyClient(cfg.bluesky_handle, cfg.bluesky_password, cfg.bluesky_max_upload_size)
         client.post_image(frame_path, post_text, alt_text)
 
     except (VideoError, BlueskyError) as e:

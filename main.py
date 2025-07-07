@@ -104,6 +104,16 @@ def main():
 
     args = parser.parse_args()
 
+    cfg = Config()
+    logging.info("Loaded configuration:")
+    logging.info(f"  BLUESKY_HANDLE: {cfg.bluesky_handle}")
+    logging.info(f"  BLUESKY_PASSWORD: {'*' * len(cfg.bluesky_password) if cfg.bluesky_password else 'N/A'}") # Mask password
+    logging.info(f"  VIDEO_PATH: {cfg.video_path}")
+    logging.info(f"  SCHEDULE_TIMES: {', '.join(cfg.schedule_times)}")
+    logging.info(f"  POST_TEXT: '{cfg.post_text}'")
+    logging.info(f"  ADD_TIMESTAMP: {cfg.add_timestamp}")
+    logging.info(f"  BLUESKY_MAX_UPLOAD_SIZE: {cfg.bluesky_max_upload_size} bytes")
+
     if args.video:
         run_single_post(args.video, args.text, args.timestamp)
     else:

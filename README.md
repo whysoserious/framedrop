@@ -117,5 +117,6 @@ docker run --rm --env-file .env -v /path/to/your/videos:/app/videos framedrop \
 | `SCHEDULE_TIMES`  | Publication times for daemon mode (`HH:MM` format, comma-separated).                             | `12:00`   | No            |
 | `POST_TEXT`       | Default text to include in the post.                                                             | ""        | No            |
 | `ADD_TIMESTAMP`   | Whether to add the frame timestamp to the post text (`true` or `false`).                         | `true`    | No            |
+| `BLUESKY_MAX_UPLOAD_SIZE` | Maximum size of the image to upload to Bluesky in bytes. Images exceeding this size will be compressed. | `921600`  | No            |
 
 ```
